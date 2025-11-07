@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="card" style="max-width: 400px; margin: 230px auto;">
-      <h1 style="margin-bottom: 24px; color: var(--primary-color); text-align: center;">Login Administrador</h1>
+      <h1 style="margin-bottom: 24px; color: var(--primary-color); text-align: center;">Login</h1>
       
       <div v-if="mensaje" :class="['alert', mensajeType === 'success' ? 'alert-success' : 'alert-error']">
         {{ mensaje }}
@@ -31,7 +31,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary" :disabled="cargando" style="width: 100%;">
-          {{ cargando ? '⏳ Ingresando...' : '✅ Ingresar' }}
+          {{ cargando ? '⏳ Ingresando...' : 'Ingresar' }}
         </button>
       </form>
 
@@ -69,7 +69,7 @@ const handleLogin = async () => {
 
     if (error) throw error
 
-    mensaje.value = '✅ Login exitoso! Redirigiendo...'
+    mensaje.value = 'Login exitoso! Redirigiendo...'
     mensajeType.value = 'success'
 
     setTimeout(() => {

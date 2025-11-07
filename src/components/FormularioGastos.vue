@@ -160,7 +160,7 @@ const guardarGasto = async () => {
 
     if (error) throw error
 
-    mensaje.value = '✅ ¡Registrado exitosamente!'
+    mensaje.value = '¡Registrado exitosamente!'
     mensajeType.value = 'success'
 
     // Limpiar formulario

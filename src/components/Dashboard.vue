@@ -130,10 +130,10 @@
                 </span>
               </td>
               <td style="padding: 12px;">{{ gasto.categoria }}</td>
-              <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <td style="padding: 8px; max-width: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 {{ gasto.motivo || '-' }}
               </td>
-              <td style="padding: 12px; text-align: right; font-weight: 500;" 
+              <td style="padding: 8px; text-align: right; font-weight: 500;" 
                   :style="{ color: gasto.tipo_movimiento === 'Ingreso' ? 'var(--success-color)' : 'var(--danger-color)' }">
                 {{ gasto.tipo_movimiento === 'Ingreso' ? '+' : '-' }} S/ {{ gasto.precio_soles.toFixed(2) }}
               </td>

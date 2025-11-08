@@ -61,6 +61,15 @@
             <option v-for="nombre in nombresUnicos" :key="nombre" :value="nombre">{{ nombre }}</option>
           </select>
         </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Fecha Específica</label>
+          <input 
+            type="date" 
+            v-model="filtroFecha"
+            style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;"
+          >
+        </div>
       </div>
     </div>
 
@@ -157,6 +166,7 @@ const cargando = ref(true)
 const filtroTipo = ref('')
 const filtroCategoria = ref('')
 const filtroNombre = ref('')
+const filtroFecha = ref('')
 
 // Cargar gastos
 const cargarGastos = async () => {
@@ -190,6 +200,15 @@ const gastosFiltrados = computed(() => {
 
   if (filtroNombre.value) {
     resultado = resultado.filter(g => g.nombre === filtroNombre.value)
+  }
+
+  if (filtroFecha.value) {
+    resultado = resultado.filter(g => {
+      const fechaGasto = new Date(g.fecha)
+      const fechaLocal = new Date(fechaGasto.getTime() - fechaGasto.getTimezoneOffset() * 60000)
+      const fechaFormateada = fechaLocal.toISOString().split('T')[0]
+      return fechaFormateada === filtroFecha.value
+    })
   }
 
   return resultado

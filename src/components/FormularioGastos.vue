@@ -1,7 +1,20 @@
 <template>
   <div class="container">
-    <div class="card" style="max-width: 600px; margin: 40px auto;">
-      <h1 style="margin-bottom: 24px; color: var(--primary-color);">💰 Registro de Consumo Familiar</h1>
+    <!-- Pantalla de acceso denegado -->
+    <div v-if="!accesoPermitido" class="card" style="max-width: 500px; margin: 60px auto; text-align: center;">
+      <h1 style="margin-bottom: 24px; color: var(--danger-color);">🔒 Acceso Denegado</h1>
+      <p style="color: var(--text-secondary); font-size: 18px; margin-bottom: 20px;">
+        No tienes permiso para acceder a esta página.
+      </p>
+      <p style="color: var(--text-secondary); font-size: 14px;">
+        Si eres parte de una familia, solicita el enlace correcto a tu administrador.
+      </p>
+    </div>
+
+    <!-- Formulario (solo se muestra si tiene acceso) -->
+    <div v-else class="card" style="max-width: 600px; margin: 40px auto;">
+      <h1 style="margin-bottom: 8px; color: var(--primary-color);">💰 Registro de Consumo</h1>
+      <p style="margin-bottom: 24px; color: var(--text-secondary);">{{ nombreFamilia }}</p>
       
       <div v-if="mensaje" :class="['alert', mensajeType === 'success' ? 'alert-success' : 'alert-error']">
         {{ mensaje }}
@@ -47,7 +60,6 @@
           </select>
         </div>
 
-        <!-- Campo que aparece solo cuando selecciona "Otros" -->
         <div class="form-group" v-if="form.categoria === 'Otros'">
           <label for="categoria_otro">Especificar Categoría *</label>
           <input 
@@ -77,7 +89,7 @@
             id="precio" 
             v-model.number="form.precio_soles" 
             step="0.01" 
-            min="1" 
+            min="0.5" 
             required 
             placeholder="Mínimo S/ 0.50"
           />
@@ -92,22 +104,21 @@
           {{ guardando ? '⏳ Guardando...' : 'Registrar' }}
         </button>
       </form>
-
-      <div style="margin-top: 24px; text-align: center; padding-top: 24px; border-top: 1px solid var(--border-color);">
-        <p style="color: var(--text-secondary); font-size: 14px;">
-          ¿Administrador? 
-          <router-link to="/login" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
-            Ir al Dashboard
-          </router-link>
-        </p>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { supabase } from '../supabase'
+import { desencriptar } from '../utils/crypto'
+
+const route = useRoute()
+
+const accesoPermitido = ref(false)
+const familiaId = ref(null)
+const nombreFamilia = ref('')
 
 const form = ref({
   nombre: '',
@@ -122,15 +133,39 @@ const mensaje = ref('')
 const mensajeType = ref('success')
 const guardando = ref(false)
 
+// Verificar acceso al montar el componente
+onMounted(async () => {
+  const codigoEncriptado = route.query.codigo
+  
+  if (codigoEncriptado) {
+    try {
+      // Desencriptar el código de la URL
+      const codigoDesencriptado = desencriptar(decodeURIComponent(codigoEncriptado))
+      
+      if (codigoDesencriptado) {
+        // Buscar la familia por código usando la función RPC
+        const { data, error } = await supabase
+          .rpc('obtener_familia_por_codigo', { codigo: codigoDesencriptado })
+        
+        if (data && data.length > 0) {
+          accesoPermitido.value = true
+          familiaId.value = data[0].id
+          nombreFamilia.value = data[0].nombre
+        }
+      }
+    } catch (error) {
+      console.error('Error al validar código:', error)
+    }
+  }
+})
+
 const handleCategoriaChange = () => {
-  // Limpiar el campo "categoria_otro" si no es "Otros"
   if (form.value.categoria !== 'Otros') {
     form.value.categoria_otro = ''
   }
 }
 
 const guardarGasto = async () => {
-  // Validar que el precio sea mínimo 1
   if (form.value.precio_soles < 0.5) {
     mensaje.value = '❌ El precio debe ser mínimo S/ 0.50.'
     mensajeType.value = 'error'
@@ -141,7 +176,6 @@ const guardarGasto = async () => {
   mensaje.value = ''
 
   try {
-    // Si seleccionó "Otros", usar el texto personalizado
     const categoriaFinal = form.value.categoria === 'Otros' 
       ? `Otros: ${form.value.categoria_otro}`
       : form.value.categoria
@@ -150,6 +184,7 @@ const guardarGasto = async () => {
       .from('gastos')
       .insert([
         {
+          familia_id: familiaId.value,
           nombre: form.value.nombre,
           tipo_movimiento: form.value.tipo_movimiento,
           categoria: categoriaFinal,
@@ -163,7 +198,6 @@ const guardarGasto = async () => {
     mensaje.value = '¡Registrado exitosamente!'
     mensajeType.value = 'success'
 
-    // Limpiar formulario
     form.value = {
       nombre: '',
       tipo_movimiento: '',

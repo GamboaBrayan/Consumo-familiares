@@ -1,7 +1,10 @@
 <template>
   <div class="container">
-    <div class="card" style="max-width: 400px; margin: 230px auto;">
-      <h1 style="margin-bottom: 24px; color: var(--primary-color); text-align: center;">Login</h1>
+    <div class="card" style="max-width: 400px; margin: 180px auto;">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="color: var(--primary-color); margin-bottom: 8px;">Consumo Familiar</h1>
+        <p style="color: var(--text-secondary); font-size: 14px;">Inicia sesión para administrar tu familia</p>
+      </div>
       
       <div v-if="mensaje" :class="['alert', mensajeType === 'success' ? 'alert-success' : 'alert-error']">
         {{ mensaje }}
@@ -35,11 +38,16 @@
         </button>
       </form>
 
-      <div style="margin-top: 24px; text-align: center; padding-top: 24px; border-top: 1px solid var(--border-color);">
-        <router-link to="/" style="color: var(--primary-color); text-decoration: none; font-size: 14px;">
-          ← Volver al formulario
-        </router-link>
-      </div>
+<!--
+<div style="margin-top: 24px; text-align: center; padding-top: 24px; border-top: 1px solid var(--border-color);">
+  <p style="color: var(--text-secondary); font-size: 14px;">
+    ¿No tienes cuenta? 
+    <router-link to="/registro" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">
+      Regístrate aquí
+    </router-link>
+  </p>
+</div>
+-->
     </div>
   </div>
 </template>
@@ -69,7 +77,7 @@ const handleLogin = async () => {
 
     if (error) throw error
 
-    mensaje.value = 'Login exitoso! Redirigiendo...'
+    mensaje.value = '✅ Login exitoso! Redirigiendo...'
     mensajeType.value = 'success'
 
     setTimeout(() => {

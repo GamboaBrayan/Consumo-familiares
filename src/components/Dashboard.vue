@@ -1,8 +1,14 @@
 <template>
   <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h1 style="color: var(--primary-color);">📊 Dashboard de Gastos</h1>
-      <button @click="handleLogout" class="btn btn-danger">Cerrar Sesión</button>
+    <!-- Encabezado -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+      <h1 style="color: var(--primary-color); margin: 0;">📊 Dashboard de Gastos</h1>
+      <div style="display: flex; gap: 12px;">
+        <router-link to="/perfil" class="btn btn-primary" style="text-decoration: none;">
+         Mi Perfil
+        </router-link>
+        <button @click="handleLogout" class="btn btn-danger">Cerrar Sesión</button>
+      </div>
     </div>
 
     <!-- Resumen de totales -->
@@ -11,12 +17,10 @@
         <h3 style="margin-bottom: 8px; font-size: 16px; opacity: 0.9;">Total Ingresos</h3>
         <p style="font-size: 32px; font-weight: bold; margin: 0;">S/ {{ totalIngresos.toFixed(2) }}</p>
       </div>
-      
       <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
         <h3 style="margin-bottom: 8px; font-size: 16px; opacity: 0.9;">Total Gastos</h3>
         <p style="font-size: 32px; font-weight: bold; margin: 0;">S/ {{ totalGastos.toFixed(2) }}</p>
       </div>
-      
       <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
         <h3 style="margin-bottom: 8px; font-size: 16px; opacity: 0.9;">Balance</h3>
         <p style="font-size: 32px; font-weight: bold; margin: 0;">S/ {{ balance.toFixed(2) }}</p>
@@ -62,13 +66,10 @@
           </select>
         </div>
 
+        <!-- 🔍 Filtro por fecha exacta -->
         <div class="form-group" style="margin-bottom: 0;">
-          <label>Fecha Específica</label>
-          <input 
-            type="date" 
-            v-model="filtroFecha"
-            style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px;"
-          >
+          <label>Fecha Exacta</label>
+          <input type="date" v-model="filtroFecha" />
         </div>
       </div>
     </div>
@@ -98,16 +99,16 @@
       </p>
     </div>
 
-    <!-- Tabla de gastos recientes -->
+    <!-- Tabla de registros -->
     <div class="card">
-      <h2 style="margin-bottom: 16px;">📝 Registros Recientes ({{ gastosFiltrados.length }})</h2>
-      
+      <h2 style="margin-bottom: 16px;">📝 Registros Recientes ({{ registrosFiltrados.length }})</h2>
+
       <div v-if="cargando" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-        ⏳ Cargando gastos...
+        ⏳ Cargando registros...
       </div>
 
-      <div v-else-if="gastosFiltrados.length === 0" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-        📭 No hay gastos registrados aún
+      <div v-else-if="registrosFiltrados.length === 0" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+        📭 No hay registros aún
       </div>
 
       <div v-else style="overflow-x: auto;">
@@ -123,28 +124,34 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="gasto in gastosFiltrados" :key="gasto.id" style="border-bottom: 1px solid var(--border-color);">
-              <td style="padding: 12px;">{{ formatearFecha(gasto.fecha) }}</td>
-              <td style="padding: 12px;">{{ gasto.nombre }}</td>
+            <tr v-for="registro in registrosFiltrados" :key="registro.id" style="border-bottom: 1px solid var(--border-color);">
+              <td style="padding: 12px;">{{ formatearFecha(registro.fecha) }}</td>
+              <td style="padding: 12px;">{{ registro.nombre }}</td>
               <td style="padding: 12px;">
                 <span :style="{
                   padding: '4px 8px',
                   borderRadius: '4px',
                   fontSize: '12px',
                   fontWeight: '500',
-                  background: gasto.tipo_movimiento === 'Ingreso' ? '#d1fae5' : '#fee2e2',
-                  color: gasto.tipo_movimiento === 'Ingreso' ? '#065f46' : '#991b1b'
+                  background: registro.tipo_movimiento === 'Ingreso' ? '#d1fae5' : '#fee2e2',
+                  color: registro.tipo_movimiento === 'Ingreso' ? '#065f46' : '#991b1b'
                 }">
-                  {{ gasto.tipo_movimiento === 'Ingreso' ? '💵' : '💸' }} {{ gasto.tipo_movimiento }}
+                  {{ registro.tipo_movimiento === 'Ingreso' ? '' : '' }} {{ registro.tipo_movimiento }}
                 </span>
               </td>
-              <td style="padding: 12px;">{{ gasto.categoria }}</td>
-              <td style="padding: 8px; max-width: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                {{ gasto.motivo || '-' }}
+              <td style="padding: 12px;">{{ registro.categoria }}</td>
+              <td style="
+                padding: 12px;
+                max-width: 400px; /* Aumenta el ancho permitido */
+                white-space: normal; /* Permite saltos de línea */
+                word-wrap: break-word; /* Ajusta texto largo */
+                line-height: 1.4;
+              ">
+                {{ registro.motivo || '-' }}
               </td>
-              <td style="padding: 8px; text-align: right; font-weight: 500;" 
-                  :style="{ color: gasto.tipo_movimiento === 'Ingreso' ? 'var(--success-color)' : 'var(--danger-color)' }">
-                {{ gasto.tipo_movimiento === 'Ingreso' ? '+' : '-' }} S/ {{ gasto.precio_soles.toFixed(2) }}
+              <td style="padding: 12px; text-align: right; font-weight: 500;" 
+                  :style="{ color: registro.tipo_movimiento === 'Ingreso' ? 'var(--success-color)' : 'var(--danger-color)' }">
+                {{ registro.tipo_movimiento === 'Ingreso' ? '+' : '-' }} S/ {{ registro.precio_soles.toFixed(2) }}
               </td>
             </tr>
           </tbody>
@@ -161,102 +168,104 @@ import { supabase } from '../supabase'
 
 const router = useRouter()
 
-const gastos = ref([])
+const registros = ref([])
 const cargando = ref(true)
 const filtroTipo = ref('')
 const filtroCategoria = ref('')
 const filtroNombre = ref('')
-const filtroFecha = ref('')
+const filtroFecha = ref('') // ✅ Nuevo filtro
+const familiaId = ref(null)
 
-// Cargar gastos
-const cargarGastos = async () => {
+// Cargar registros
+const cargarRegistros = async () => {
   cargando.value = true
   try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return router.push('/')
+
+    const { data: perfil } = await supabase
+      .from('perfiles')
+      .select('familia_id')
+      .eq('id', user.id)
+      .single()
+
+    familiaId.value = perfil?.familia_id
+
     const { data, error } = await supabase
       .from('gastos')
       .select('*')
+      .eq('familia_id', familiaId.value)
       .order('fecha', { ascending: false })
 
     if (error) throw error
-    gastos.value = data || []
-  } catch (error) {
-    console.error('Error al cargar gastos:', error)
+    registros.value = data || []
+  } catch (e) {
+    console.error('Error al cargar registros:', e)
   } finally {
     cargando.value = false
   }
 }
 
-// Gastos filtrados
-const gastosFiltrados = computed(() => {
-  let resultado = gastos.value
+// Registros filtrados
+const registrosFiltrados = computed(() => {
+  let resultado = registros.value
 
-  if (filtroTipo.value) {
-    resultado = resultado.filter(g => g.tipo_movimiento === filtroTipo.value)
-  }
+  if (filtroTipo.value)
+    resultado = resultado.filter(r => r.tipo_movimiento === filtroTipo.value)
 
-  if (filtroCategoria.value) {
-    resultado = resultado.filter(g => g.categoria === filtroCategoria.value)
-  }
+  if (filtroCategoria.value)
+    resultado = resultado.filter(r => r.categoria === filtroCategoria.value)
 
-  if (filtroNombre.value) {
-    resultado = resultado.filter(g => g.nombre === filtroNombre.value)
-  }
+  if (filtroNombre.value)
+    resultado = resultado.filter(r => r.nombre === filtroNombre.value)
 
+  // ✅ Filtro de fecha exacta
   if (filtroFecha.value) {
-    resultado = resultado.filter(g => {
-      const fechaGasto = new Date(g.fecha)
-      const fechaLocal = new Date(fechaGasto.getTime() - fechaGasto.getTimezoneOffset() * 60000)
-      const fechaFormateada = fechaLocal.toISOString().split('T')[0]
-      return fechaFormateada === filtroFecha.value
+    const fechaSeleccionada = new Date(filtroFecha.value)
+    resultado = resultado.filter(r => {
+      const fechaRegistro = new Date(r.fecha)
+      return (
+        fechaRegistro.getFullYear() === fechaSeleccionada.getFullYear() &&
+        fechaRegistro.getMonth() === fechaSeleccionada.getMonth() &&
+        fechaRegistro.getDate() === fechaSeleccionada.getDate()
+      )
     })
   }
 
   return resultado
 })
 
-// Nombres únicos para el filtro
-const nombresUnicos = computed(() => {
-  return [...new Set(gastos.value.map(g => g.nombre))].sort()
-})
+// Nombres únicos
+const nombresUnicos = computed(() => [...new Set(registros.value.map(r => r.nombre))].sort())
 
 // Totales
-const totalIngresos = computed(() => {
-  return gastosFiltrados.value
-    .filter(g => g.tipo_movimiento === 'Ingreso')
-    .reduce((sum, g) => sum + parseFloat(g.precio_soles), 0)
-})
+const totalIngresos = computed(() =>
+  registrosFiltrados.value.filter(r => r.tipo_movimiento === 'Ingreso')
+    .reduce((sum, r) => sum + parseFloat(r.precio_soles), 0)
+)
 
-const totalGastos = computed(() => {
-  return gastosFiltrados.value
-    .filter(g => g.tipo_movimiento === 'Gasto')
-    .reduce((sum, g) => sum + parseFloat(g.precio_soles), 0)
-})
+const totalGastos = computed(() =>
+  registrosFiltrados.value.filter(r => r.tipo_movimiento === 'Gasto')
+    .reduce((sum, r) => sum + parseFloat(r.precio_soles), 0)
+)
 
 const balance = computed(() => totalIngresos.value - totalGastos.value)
 
-// Gastos por categoría (solo egresos)
+// Gastos por categoría
 const gastosPorCategoria = computed(() => {
   const categorias = {}
-  
-  gastosFiltrados.value
-    .filter(g => g.tipo_movimiento === 'Gasto')
-    .forEach(g => {
-      if (!categorias[g.categoria]) {
-        categorias[g.categoria] = 0
-      }
-      categorias[g.categoria] += parseFloat(g.precio_soles)
+  registrosFiltrados.value
+    .filter(r => r.tipo_movimiento === 'Gasto')
+    .forEach(r => {
+      categorias[r.categoria] = (categorias[r.categoria] || 0) + parseFloat(r.precio_soles)
     })
-
   return Object.entries(categorias)
     .map(([categoria, total]) => ({ categoria, total }))
     .sort((a, b) => b.total - a.total)
 })
 
-const maxGastoCategoria = computed(() => {
-  return gastosPorCategoria.value.length > 0 
-    ? Math.max(...gastosPorCategoria.value.map(c => c.total))
-    : 1
-})
+const maxGastoCategoria = computed(() => gastosPorCategoria.value.length > 0 
+  ? Math.max(...gastosPorCategoria.value.map(c => c.total)) : 1)
 
 // Formatear fecha
 const formatearFecha = (fecha) => {
@@ -273,10 +282,8 @@ const formatearFecha = (fecha) => {
 // Logout
 const handleLogout = async () => {
   await supabase.auth.signOut()
-  router.push('/login')
+  router.push('/')
 }
 
-onMounted(() => {
-  cargarGastos()
-})
+onMounted(cargarRegistros)
 </script>
